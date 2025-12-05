@@ -3,15 +3,15 @@ import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { User, Mail, Phone, LogOut } from 'lucide-react';
+import { User, Mail, LogOut, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const TechProfilePage = () => {
-  const { user, logout } = useAuth();
+  const { profile, role, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -25,23 +25,23 @@ const TechProfilePage = () => {
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-2xl font-bold text-primary-foreground">
-                  {user?.name?.charAt(0) || 'T'}
+                  {profile?.name?.charAt(0) || 'T'}
                 </span>
               </div>
               <div>
-                <CardTitle>{user?.name}</CardTitle>
-                <p className="text-muted-foreground">Technician</p>
+                <CardTitle>{profile?.name || 'Technician'}</CardTitle>
+                <p className="text-muted-foreground capitalize">{role || 'Technician'}</p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              <span>{user?.email}</span>
+              <span>{profile?.email || 'No email'}</span>
             </div>
             <div className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>+91 98765 43210</span>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+              <span className="capitalize">{role || 'technician'}</span>
             </div>
           </CardContent>
         </Card>

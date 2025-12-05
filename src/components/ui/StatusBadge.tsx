@@ -7,6 +7,7 @@ interface StatusBadgeProps {
 }
 
 const statusStyles: Record<JobStatus, string> = {
+  unassigned: 'bg-gray-100 text-gray-800 border-gray-200',
   assigned: 'bg-blue-100 text-blue-800 border-blue-200',
   accepted: 'bg-violet-100 text-violet-800 border-violet-200',
   waiting: 'bg-amber-100 text-amber-800 border-amber-200',

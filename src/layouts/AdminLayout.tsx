@@ -10,6 +10,7 @@ import {
   Menu,
   X,
   Wrench,
+  UserPlus,
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -19,18 +20,21 @@ interface AdminLayoutProps {
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/create-job', label: 'Create Job', icon: PlusCircle },
+  { href: '/admin/invites', label: 'Invites', icon: UserPlus },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const { user, logout } = useAuth();
+  const { profile, role, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
+
+  const roleLabel = role === 'admin' ? 'Administrator' : role === 'semiadmin' ? 'Semi-Admin' : 'User';
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,12 +102,12 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-sidebar-accent rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-sidebar-accent-foreground">
-                  {user?.name?.charAt(0) || 'A'}
+                  {profile?.name?.charAt(0) || 'A'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name}</p>
-                <p className="text-xs text-sidebar-foreground/60">Administrator</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{profile?.name || 'Admin'}</p>
+                <p className="text-xs text-sidebar-foreground/60">{roleLabel}</p>
               </div>
             </div>
             <Button

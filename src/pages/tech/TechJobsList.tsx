@@ -1,29 +1,40 @@
 import { TechnicianLayout } from '@/layouts/TechnicianLayout';
-import { useJobs } from '@/context/JobsContext';
+import { useJobs } from '@/hooks/useJobs';
 import { useAuth } from '@/context/AuthContext';
 import { JobCard } from '@/components/JobCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useMemo } from 'react';
+import { Loader } from '@/components/Loader';
 
 const TechJobsList = () => {
-  const { jobs } = useJobs();
-  const { user } = useAuth();
+  const { jobs, loading } = useJobs();
+  const { profile } = useAuth();
 
-  // Filter jobs for this technician (using tech-1 as default for demo)
-  const techJobs = useMemo(() => {
-    return jobs.filter(job => job.technician?.techId === 'tech-1');
+  const activeJobs = useMemo(() => {
+    return jobs.filter(job => job.status !== 'completed');
   }, [jobs]);
 
-  const activeJobs = techJobs.filter(job => job.status !== 'completed');
-  const completedJobs = techJobs.filter(job => job.status === 'completed');
+  const completedJobs = useMemo(() => {
+    return jobs.filter(job => job.status === 'completed');
+  }, [jobs]);
+
+  if (loading) {
+    return (
+      <TechnicianLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader />
+        </div>
+      </TechnicianLayout>
+    );
+  }
 
   return (
     <TechnicianLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">My Jobs</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+          <p className="text-muted-foreground">Welcome back, {profile?.name || 'Technician'}</p>
         </div>
 
         <Tabs defaultValue="active" className="w-full">
@@ -42,7 +53,7 @@ const TechJobsList = () => {
             {activeJobs.length > 0 ? (
               <div className="space-y-4">
                 {activeJobs.map(job => (
-                  <JobCard key={job.jobId} job={job} variant="technician" />
+                  <JobCard key={job.id} job={job} variant="technician" />
                 ))}
               </div>
             ) : (
@@ -56,7 +67,7 @@ const TechJobsList = () => {
             {completedJobs.length > 0 ? (
               <div className="space-y-4">
                 {completedJobs.map(job => (
-                  <JobCard key={job.jobId} job={job} variant="technician" />
+                  <JobCard key={job.id} job={job} variant="technician" />
                 ))}
               </div>
             ) : (

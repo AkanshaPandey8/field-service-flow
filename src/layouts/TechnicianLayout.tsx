@@ -10,12 +10,12 @@ interface TechnicianLayoutProps {
 }
 
 export const TechnicianLayout = ({ children }: TechnicianLayoutProps) => {
-  const { user, logout } = useAuth();
+  const { profile, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -39,7 +39,7 @@ export const TechnicianLayout = ({ children }: TechnicianLayoutProps) => {
               <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
                 <User className="h-4 w-4" />
               </div>
-              <span className="text-sm font-medium">{user?.name}</span>
+              <span className="text-sm font-medium">{profile?.name || 'Technician'}</span>
             </div>
             <Button variant="ghost" size="icon" onClick={handleLogout}>
               <LogOut className="h-5 w-5" />

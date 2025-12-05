@@ -1,4 +1,5 @@
 export type JobStatus =
+  | 'unassigned'
   | 'assigned'
   | 'accepted'
   | 'waiting'
@@ -11,7 +12,7 @@ export type JobStatus =
   | 'payment'
   | 'completed';
 
-export type UserRole = 'admin' | 'technician';
+export type UserRole = 'admin' | 'semiadmin' | 'technician' | 'viewer';
 
 export interface QCData {
   display: 'ok' | 'not_ok' | null;
@@ -28,6 +29,8 @@ export interface QCData {
   imei: string;
   model: string;
   comments: string;
+  customerSignature?: string;
+  submittedAt?: string;
 }
 
 export interface Customer {
@@ -57,18 +60,19 @@ export interface Financials {
 }
 
 export interface Timeline {
-  assignedAt: string | null;
-  acceptedAt: string | null;
-  waitingAt: string | null;
-  enRouteAt: string | null;
-  doorstepAt: string | null;
-  qcBeforeAt: string | null;
-  jobStartAt: string | null;
-  jobEndAt: string | null;
-  qcAfterAt: string | null;
-  invoiceAt: string | null;
-  paymentAt: string | null;
-  completedAt: string | null;
+  createdAt?: string | null;
+  assignedAt?: string | null;
+  acceptedAt?: string | null;
+  waitingAt?: string | null;
+  enRouteAt?: string | null;
+  doorstepAt?: string | null;
+  qcBeforeAt?: string | null;
+  jobStartAt?: string | null;
+  jobEndAt?: string | null;
+  qcAfterAt?: string | null;
+  invoiceAt?: string | null;
+  paymentAt?: string | null;
+  completedAt?: string | null;
 }
 
 export interface Job {
@@ -95,6 +99,7 @@ export interface User {
 }
 
 export const JOB_STATUS_ORDER: JobStatus[] = [
+  'unassigned',
   'assigned',
   'accepted',
   'waiting',
@@ -109,6 +114,7 @@ export const JOB_STATUS_ORDER: JobStatus[] = [
 ];
 
 export const STATUS_LABELS: Record<JobStatus, string> = {
+  unassigned: 'Unassigned',
   assigned: 'Assigned',
   accepted: 'Accepted',
   waiting: 'Waiting',

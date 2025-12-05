@@ -14,16 +14,261 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      invites: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          used: boolean
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used?: boolean
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used?: boolean
+        }
+        Relationships: []
+      }
+      jobs: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_address: string
+          customer_alt_phone: string | null
+          customer_location: string | null
+          customer_name: string
+          customer_phone: string
+          device_issue: string
+          device_type: string
+          gst: number | null
+          id: string
+          notes: string | null
+          parts_cost: number | null
+          payment_method: string | null
+          qc_after: Json | null
+          qc_before: Json | null
+          service_charge: number | null
+          status: Database["public"]["Enums"]["job_status"]
+          technician_id: string | null
+          time_slot: string | null
+          timeline: Json | null
+          total: number | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address: string
+          customer_alt_phone?: string | null
+          customer_location?: string | null
+          customer_name: string
+          customer_phone: string
+          device_issue: string
+          device_type: string
+          gst?: number | null
+          id?: string
+          notes?: string | null
+          parts_cost?: number | null
+          payment_method?: string | null
+          qc_after?: Json | null
+          qc_before?: Json | null
+          service_charge?: number | null
+          status?: Database["public"]["Enums"]["job_status"]
+          technician_id?: string | null
+          time_slot?: string | null
+          timeline?: Json | null
+          total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string
+          customer_alt_phone?: string | null
+          customer_location?: string | null
+          customer_name?: string
+          customer_phone?: string
+          device_issue?: string
+          device_type?: string
+          gst?: number | null
+          id?: string
+          notes?: string | null
+          parts_cost?: number | null
+          payment_method?: string | null
+          qc_after?: Json | null
+          qc_before?: Json | null
+          service_charge?: number | null
+          status?: Database["public"]["Enums"]["job_status"]
+          technician_id?: string | null
+          time_slot?: string | null
+          timeline?: Json | null
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          job_id: string
+          status: Database["public"]["Enums"]["job_status"]
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          job_id: string
+          status: Database["public"]["Enums"]["job_status"]
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          job_id?: string
+          status?: Database["public"]["Enums"]["job_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "status_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "semiadmin" | "technician" | "viewer"
+      job_status:
+        | "unassigned"
+        | "assigned"
+        | "accepted"
+        | "waiting"
+        | "en_route"
+        | "doorstep"
+        | "qc_before"
+        | "job_started"
+        | "qc_after"
+        | "invoice"
+        | "payment"
+        | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +395,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "semiadmin", "technician", "viewer"],
+      job_status: [
+        "unassigned",
+        "assigned",
+        "accepted",
+        "waiting",
+        "en_route",
+        "doorstep",
+        "qc_before",
+        "job_started",
+        "qc_after",
+        "invoice",
+        "payment",
+        "completed",
+      ],
+    },
   },
 } as const

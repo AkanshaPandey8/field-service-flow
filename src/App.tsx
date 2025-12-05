@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
-import { JobsProvider } from "@/context/JobsContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Pages
@@ -22,74 +21,79 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <JobsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Public */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/" element={<Navigate to="/login" replace />} />
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth/callback" element={<LoginPage />} />
+            <Route path="/invite" element={<LoginPage />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
 
-              {/* Admin Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/create-job"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <CreateJobPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/jobs/:jobId"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminJobDetailPage />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'semiadmin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'semiadmin']}>
+                  <Routes>
+                    <Route path="create-job" element={<CreateJobPage />} />
+                    <Route path="jobs/:jobId" element={<AdminJobDetailPage />} />
+                  </Routes>
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Technician Routes */}
-              <Route
-                path="/tech"
-                element={
-                  <ProtectedRoute allowedRoles={['technician']}>
-                    <TechJobsList />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/tech/jobs/:jobId"
-                element={
-                  <ProtectedRoute allowedRoles={['technician']}>
-                    <JobWorkflowPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/tech/profile"
-                element={
-                  <ProtectedRoute allowedRoles={['technician']}>
-                    <TechProfilePage />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Technician Routes */}
+            <Route
+              path="/tech"
+              element={
+                <ProtectedRoute allowedRoles={['technician']}>
+                  <TechJobsList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tech/jobs/:jobId"
+              element={
+                <ProtectedRoute allowedRoles={['technician']}>
+                  <JobWorkflowPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tech/profile"
+              element={
+                <ProtectedRoute allowedRoles={['technician']}>
+                  <TechProfilePage />
+                </ProtectedRoute>
+              }
+            />
 
-              {/* 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </JobsProvider>
+            {/* Viewer Routes */}
+            <Route
+              path="/viewer"
+              element={
+                <ProtectedRoute allowedRoles={['viewer']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

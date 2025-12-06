@@ -1,12 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AdminLayout } from '@/layouts/AdminLayout';
 import { useJobs } from '@/hooks/useJobs';
 import { JOB_STATUS_ORDER, STATUS_LABELS } from '@/types';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,11 +16,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/context/AuthContext';
 import {
   Search,
   Filter,
@@ -31,10 +37,11 @@ import {
   Phone,
   User,
   Clock,
-  Eye,
   ChevronDown,
   X,
-  Plus,
+  Eye,
+  LogOut,
+  Smartphone,
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
@@ -44,20 +51,16 @@ type LayoutMode = 'columns' | 'rows';
 type SortOption = 'newest' | 'oldest' | 'customer_az' | 'customer_za';
 type TimeFilter = 'all' | 'today' | '24h' | '3d' | '7d';
 
-const AdminDashboard = () => {
+const ViewerDashboard = () => {
   const { jobs, loading } = useJobs();
-  const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
   
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('columns');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilters, setStatusFilters] = useState<JobStatus[]>([]);
-  const [deviceFilters, setDeviceFilters] = useState<string[]>([]);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
-
-  const deviceTypes = useMemo(() => {
-    return [...new Set(jobs.map(j => j.device_type))];
-  }, [jobs]);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const filteredJobs = useMemo(() => {
     let result = [...jobs];
@@ -75,10 +78,6 @@ const AdminDashboard = () => {
 
     if (statusFilters.length > 0) {
       result = result.filter(job => statusFilters.includes(job.status));
-    }
-
-    if (deviceFilters.length > 0) {
-      result = result.filter(job => deviceFilters.includes(job.device_type));
     }
 
     const now = Date.now();
@@ -112,7 +111,7 @@ const AdminDashboard = () => {
     });
 
     return result;
-  }, [jobs, searchQuery, statusFilters, deviceFilters, timeFilter, sortBy]);
+  }, [jobs, searchQuery, statusFilters, timeFilter, sortBy]);
 
   const jobsByStatus = useMemo(() => {
     const grouped: Record<JobStatus, Job[]> = {} as Record<JobStatus, Job[]>;
@@ -125,17 +124,16 @@ const AdminDashboard = () => {
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilters([]);
-    setDeviceFilters([]);
     setTimeFilter('all');
   };
 
-  const hasActiveFilters = searchQuery || statusFilters.length || deviceFilters.length || timeFilter !== 'all';
+  const hasActiveFilters = searchQuery || statusFilters.length || timeFilter !== 'all';
 
   const JobCardCompact = ({ job }: { job: Job }) => (
     <Card 
       className="bg-card hover:shadow-md transition-all cursor-pointer group border-l-4"
       style={{ borderLeftColor: `hsl(var(--status-${job.status.replace('_', '-')}))` }}
-      onClick={() => navigate(`/admin/jobs/${job.id}`)}
+      onClick={() => setSelectedJob(job)}
     >
       <CardContent className="p-3">
         <div className="space-y-2">
@@ -157,23 +155,17 @@ const AdminDashboard = () => {
             <span>{job.customer_phone}</span>
           </div>
           
-          <div className="flex items-center justify-between text-xs">
-            {job.time_slot && (
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>{job.time_slot}</span>
-              </div>
-            )}
-          </div>
+          {job.time_slot && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>{job.time_slot}</span>
+            </div>
+          )}
 
           <Button
             size="sm"
             variant="ghost"
             className="w-full h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/admin/jobs/${job.id}`);
-            }}
           >
             <Eye className="h-3 w-3 mr-1" />
             View Details
@@ -185,12 +177,9 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-10 w-32" />
-          </div>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <Skeleton className="h-8 w-48" />
           <div className="flex gap-4">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="w-72 space-y-3">
@@ -201,24 +190,31 @@ const AdminDashboard = () => {
             ))}
           </div>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Job Dashboard</h1>
-            <p className="text-muted-foreground">{filteredJobs.length} jobs found</p>
+            <h1 className="text-xl font-bold text-foreground">Job Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Read-only view • {filteredJobs.length} jobs</p>
           </div>
-          <Button onClick={() => navigate('/admin/create-job')}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Job
-          </Button>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">{profile?.name}</span>
+            <Badge variant="secondary">Viewer</Badge>
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+      </header>
 
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Search and Filters */}
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -262,37 +258,6 @@ const AdminDashboard = () => {
                     ))}
                   </div>
                 </ScrollArea>
-              </PopoverContent>
-            </Popover>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  Device
-                  {deviceFilters.length > 0 && (
-                    <Badge variant="secondary" className="ml-1">{deviceFilters.length}</Badge>
-                  )}
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-3" align="start">
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {deviceTypes.map(device => (
-                    <label key={device} className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={deviceFilters.includes(device)}
-                        onCheckedChange={(checked) => {
-                          setDeviceFilters(prev =>
-                            checked
-                              ? [...prev, device]
-                              : prev.filter(d => d !== device)
-                          );
-                        }}
-                      />
-                      <span className="text-sm">{device}</span>
-                    </label>
-                  ))}
-                </div>
               </PopoverContent>
             </Popover>
 
@@ -349,6 +314,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        {/* Kanban Board */}
         {layoutMode === 'columns' ? (
           <div className="overflow-x-auto pb-4">
             <div className="flex gap-4 min-w-max">
@@ -402,8 +368,86 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
-    </AdminLayout>
+
+      {/* Job Detail Modal */}
+      <Dialog open={!!selectedJob} onOpenChange={() => setSelectedJob(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <span>{selectedJob?.id.slice(0, 8).toUpperCase()}</span>
+              {selectedJob && <StatusBadge status={selectedJob.status} />}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedJob && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Customer
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-1">
+                    <p className="font-medium">{selectedJob.customer_name}</p>
+                    <p className="text-muted-foreground">{selectedJob.customer_phone}</p>
+                    <p className="text-muted-foreground">{selectedJob.customer_address}</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Smartphone className="h-4 w-4" />
+                      Device
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-1">
+                    <p className="font-medium">{selectedJob.device_type}</p>
+                    <p className="text-muted-foreground">{selectedJob.device_issue}</p>
+                    {selectedJob.time_slot && (
+                      <p className="text-muted-foreground">{selectedJob.time_slot}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {selectedJob.notes && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-sm font-medium mb-1">Notes</p>
+                    <p className="text-sm text-muted-foreground">{selectedJob.notes}</p>
+                  </div>
+                </>
+              )}
+
+              <Separator />
+
+              <div className="grid grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Service</p>
+                  <p className="font-medium">₹{selectedJob.service_charge || 0}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Parts</p>
+                  <p className="font-medium">₹{selectedJob.parts_cost || 0}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">GST</p>
+                  <p className="font-medium">₹{selectedJob.gst || 0}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Total</p>
+                  <p className="font-bold">₹{selectedJob.total || 0}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
-export default AdminDashboard;
+export default ViewerDashboard;

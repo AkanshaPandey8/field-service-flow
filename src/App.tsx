@@ -8,13 +8,26 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Pages
 import LoginPage from "@/pages/LoginPage";
+import AuthCallback from "@/pages/auth/AuthCallback";
+import NotFound from "@/pages/NotFound";
+
+// Admin Pages
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import CreateJobPage from "@/pages/admin/CreateJobPage";
 import AdminJobDetailPage from "@/pages/admin/AdminJobDetailPage";
+
+// Technician Pages
 import TechJobsList from "@/pages/tech/TechJobsList";
-import JobWorkflowPage from "@/pages/tech/JobWorkflowPage";
 import TechProfilePage from "@/pages/tech/TechProfilePage";
-import NotFound from "@/pages/NotFound";
+import JobWorkflowPage from "@/pages/tech/JobWorkflowPage";
+
+// Viewer Pages
+import ViewerDashboard from "@/pages/viewer/ViewerDashboard";
+
+// SemiAdmin Pages
+import SemiAdminDashboard from "@/pages/semiadmin/SemiAdminDashboard";
+import TechniciansPage from "@/pages/semiadmin/TechniciansPage";
+import AssignJobPage from "@/pages/semiadmin/AssignJobPage";
 
 const queryClient = new QueryClient();
 
@@ -26,29 +39,59 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Public */}
+            {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/auth/callback" element={<LoginPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/invite" element={<LoginPage />} />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-
+            
             {/* Admin Routes */}
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'semiadmin']}>
+                <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/admin/*"
+              path="/admin/create-job"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'semiadmin']}>
-                  <Routes>
-                    <Route path="create-job" element={<CreateJobPage />} />
-                    <Route path="jobs/:jobId" element={<AdminJobDetailPage />} />
-                  </Routes>
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <CreateJobPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/jobs/:jobId"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminJobDetailPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* SemiAdmin Routes */}
+            <Route
+              path="/semiadmin"
+              element={
+                <ProtectedRoute allowedRoles={['semiadmin', 'admin']}>
+                  <SemiAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/semiadmin/technicians"
+              element={
+                <ProtectedRoute allowedRoles={['semiadmin', 'admin']}>
+                  <TechniciansPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/semiadmin/assign/:jobId"
+              element={
+                <ProtectedRoute allowedRoles={['semiadmin', 'admin']}>
+                  <AssignJobPage />
                 </ProtectedRoute>
               }
             />
@@ -63,18 +106,18 @@ const App = () => (
               }
             />
             <Route
-              path="/tech/jobs/:jobId"
-              element={
-                <ProtectedRoute allowedRoles={['technician']}>
-                  <JobWorkflowPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/tech/profile"
               element={
                 <ProtectedRoute allowedRoles={['technician']}>
                   <TechProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tech/jobs/:jobId"
+              element={
+                <ProtectedRoute allowedRoles={['technician']}>
+                  <JobWorkflowPage />
                 </ProtectedRoute>
               }
             />
@@ -83,13 +126,19 @@ const App = () => (
             <Route
               path="/viewer"
               element={
-                <ProtectedRoute allowedRoles={['viewer']}>
-                  <AdminDashboard />
+                <ProtectedRoute allowedRoles={['viewer', 'admin', 'semiadmin', 'technician']}>
+                  <ViewerDashboard />
                 </ProtectedRoute>
               }
             />
 
-            {/* 404 */}
+            {/* Not Authorized */}
+            <Route path="/not-authorized" element={<NotFound />} />
+
+            {/* Root redirect */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            
+            {/* Catch all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
